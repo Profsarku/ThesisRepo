@@ -1,10 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { 
+  FunnelIcon, 
+  XMarkIcon,
+  CheckIcon
+} from '@heroicons/react/24/outline';
 
-export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPapers: (papers: any[]) => void }) {
+interface AdvancedFiltersProps {
+  papers: any[];
+  setFilteredPapers: (papers: any[]) => void;
+  setCurrentPage: (page: number) => void;
+}
+
+export default function AdvancedFilters({ papers, setFilteredPapers, setCurrentPage }: AdvancedFiltersProps) {
   const { t } = useTranslation();
   const [filters, setFilters] = useState({
     country: '',
@@ -14,33 +24,52 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
     date: '',
     institution: '',
   });
+  const [isApplying, setIsApplying] = useState(false);
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
   const applyFilters = async () => {
+    setIsApplying(true);
+    setCurrentPage(1);
+    
     try {
-      let query = supabase.from('global_research_repository').select('*');
-      if (filters.country) query = query.eq('country', filters.country);
-      if (filters.subject) query = query.eq('subject', filters.subject);
-      if (filters.level) query = query.eq('level', filters.level);
-      if (filters.type) query = query.eq('type', filters.type);
-      if (filters.institution) query = query.ilike('institution', `%${filters.institution}%`);
-      if (filters.date) {
-        if (filters.date === 'older') {
-          query = query.lt('submitted', '2020-01-01');
-        } else {
-          query = query.gte('submitted', `${filters.date}-01-01`).lte('submitted', `${filters.date}-12-31`);
-        }
+      let filtered = [...papers];
+      
+      if (filters.country) {
+        filtered = filtered.filter(paper => paper.country === filters.country);
       }
-      query = query.order('submitted', { ascending: false });
-      const { data, error } = await query;
-      if (error) throw error;
-      setFilteredPapers(data || []);
+      if (filters.subject) {
+        filtered = filtered.filter(paper => paper.subject === filters.subject);
+      }
+      if (filters.level) {
+        filtered = filtered.filter(paper => paper.level === filters.level);
+      }
+      if (filters.type) {
+        filtered = filtered.filter(paper => paper.type === filters.type);
+      }
+      if (filters.institution) {
+        filtered = filtered.filter(paper => 
+          paper.institution?.toLowerCase().includes(filters.institution.toLowerCase())
+        );
+      }
+      if (filters.date) {
+        filtered = filtered.filter(paper => {
+          const paperYear = new Date(paper.submitted).getFullYear();
+          if (filters.date === 'older') {
+            return paperYear < 2020;
+          }
+          return paperYear.toString() === filters.date;
+        });
+      }
+      
+      setFilteredPapers(filtered);
     } catch (error) {
       console.error('Filter failed:', error);
       setFilteredPapers([]);
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -53,21 +82,38 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
       date: '',
       institution: '',
     });
-    applyFilters();
+    setFilteredPapers(papers);
+    setCurrentPage(1);
   };
 
+  const hasActiveFilters = Object.values(filters).some(value => value !== '');
+
   return (
-    <div className="filter-section rounded-lg p-6 mb-8">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">{t('advancedSearchFilters')}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+    <div className="card p-6 mb-8 animate-slide-up">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <FunnelIcon className="w-6 h-6 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">{t('advancedSearchFilters')}</h3>
+        </div>
+        {hasActiveFilters && (
+          <span className="badge badge-primary">
+            {Object.values(filters).filter(v => v !== '').length} active
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {/* Country Filter */}
         <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">{t('countryRegion')}</label>
+          <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('countryRegion')}
+          </label>
           <select
             id="country"
             name="country"
             value={filters.country}
             onChange={handleFilterChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input"
             aria-label={t('countryRegion')}
           >
             <option value="">{t('allCountries')}</option>
@@ -87,14 +133,18 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
             <option value="Peru">{t('peru')}</option>
           </select>
         </div>
+
+        {/* Subject Filter */}
         <div>
-          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">{t('subjectClassification')}</label>
+          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('subjectClassification')}
+          </label>
           <select
             id="subject"
             name="subject"
             value={filters.subject}
             onChange={handleFilterChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input"
             aria-label={t('subjectClassification')}
           >
             <option value="">{t('allSubjects')}</option>
@@ -109,14 +159,18 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
             <option value="soc">{t('socialSciences')}</option>
           </select>
         </div>
+
+        {/* Education Level Filter */}
         <div>
-          <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">{t('educationLevel')}</label>
+          <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('educationLevel')}
+          </label>
           <select
             id="level"
             name="level"
             value={filters.level}
             onChange={handleFilterChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input"
             aria-label={t('educationLevel')}
           >
             <option value="">{t('allLevels')}</option>
@@ -125,46 +179,43 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
             <option value="community">{t('communityBased')}</option>
           </select>
         </div>
+
+        {/* Publication Type Filter */}
         <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">{t('publicationType')}</label>
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('publicationType')}
+          </label>
           <select
             id="type"
             name="type"
             value={filters.type}
             onChange={handleFilterChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input"
             aria-label={t('publicationType')}
           >
             <option value="">{t('allTypes')}</option>
             <option value="article">{t('journalArticle')}</option>
             <option value="conference_paper">{t('conferencePaper')}</option>
             <option value="book">{t('book')}</option>
-            <option value="book_chapter">{t('bookChapter')}</option>
             <option value="thesis">{t('thesis')}</option>
             <option value="dissertation">{t('dissertation')}</option>
             <option value="technical_report">{t('technicalReport')}</option>
-            <option value="working_paper">{t('workingPaper')}</option>
-            <option value="preprint">{t('preprint')}</option>
-            <option value="review_article">{t('reviewArticle')}</option>
-            <option value="case_study">{t('caseStudy')}</option>
-            <option value="letter">{t('letter')}</option>
-            <option value="patent">{t('patent')}</option>
-            <option value="presentation">{t('presentation')}</option>
-            <option value="poster">{t('poster')}</option>
-            <option value="dataset">{t('dataset')}</option>
-            <option value="software">{t('software')}</option>
             <option value="community_report">{t('communityReport')}</option>
             <option value="other">{t('other')}</option>
           </select>
         </div>
+
+        {/* Date Range Filter */}
         <div>
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">{t('dateRange')}</label>
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('dateRange')}
+          </label>
           <select
             id="date"
             name="date"
             value={filters.date}
             onChange={handleFilterChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input"
             aria-label={t('dateRange')}
           >
             <option value="">{t('allDates')}</option>
@@ -176,8 +227,12 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
             <option value="older">{t('before2020')}</option>
           </select>
         </div>
+
+        {/* Institution Filter */}
         <div>
-          <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-2">{t('institution')}</label>
+          <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-2">
+            {t('institution')}
+          </label>
           <input
             id="institution"
             type="text"
@@ -185,17 +240,38 @@ export default function AdvancedFilters({ setFilteredPapers }: { setFilteredPape
             value={filters.institution}
             onChange={handleFilterChange}
             placeholder={t('institutionPlaceholder')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            className="input"
             aria-label={t('institution')}
           />
         </div>
       </div>
-      <div className="flex gap-4">
-        <button onClick={applyFilters} className="arxiv-button px-6 py-2 rounded-md font-medium">
-          {t('applyFilters')}
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          onClick={applyFilters}
+          disabled={isApplying}
+          className="btn btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isApplying ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Applying...</span>
+            </>
+          ) : (
+            <>
+              <CheckIcon className="w-4 h-4" />
+              <span>{t('applyFilters')}</span>
+            </>
+          )}
         </button>
-        <button onClick={clearFilters} className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
-          {t('clearAll')}
+        
+        <button
+          onClick={clearFilters}
+          className="btn btn-secondary flex items-center justify-center space-x-2"
+        >
+          <XMarkIcon className="w-4 h-4" />
+          <span>{t('clearAll')}</span>
         </button>
       </div>
     </div>
