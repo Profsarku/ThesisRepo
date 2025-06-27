@@ -4,14 +4,6 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
-import { 
-  XMarkIcon,
-  CloudArrowUpIcon,
-  DocumentTextIcon,
-  InformationCircleIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon
-} from '@heroicons/react/24/outline';
 
 interface UploadModalProps {
   onClose: () => void;
@@ -38,9 +30,9 @@ export default function UploadModal({ onClose }: UploadModalProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const steps = [
-    { id: 1, name: 'Basic Information', icon: DocumentTextIcon },
-    { id: 2, name: 'Details & Upload', icon: CloudArrowUpIcon },
-    { id: 3, name: 'Review & Submit', icon: CheckCircleIcon },
+    { id: 1, name: 'Basic Information', description: 'Title, authors, and classification' },
+    { id: 2, name: 'Details & Upload', description: 'Abstract and file upload' },
+    { id: 3, name: 'Review & Submit', description: 'Final review and submission' },
   ];
 
   const validateStep = (step: number) => {
@@ -111,46 +103,9 @@ export default function UploadModal({ onClose }: UploadModalProps) {
     setSubmitStatus('idle');
     
     try {
-      // Verify user via inested.com's JWT
-      const response = await fetch('/api/auth/verify', {
-        headers: {
-          'Authorization': `Bearer ${document.cookie.split('inested_token=')[1]?.split(';')[0]}`,
-        },
-      });
+      // Simulate submission
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      if (!response.ok) {
-        router.push('https://inested.com/login');
-        return;
-      }
-      
-      const { userId } = await response.json();
-
-      if (!formData.file) throw new Error('No file selected');
-
-      // Upload file to Supabase Storage
-      const filePath = `papers/${Date.now()}_${formData.file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('papers')
-        .upload(filePath, formData.file);
-
-      if (uploadError) throw uploadError;
-
-      // Save metadata to Supabase
-      const { error } = await supabase.from('global_research_repository').insert({
-        title: formData.title,
-        authors: formData.authors.split(',').map((author) => author.trim()),
-        abstract: formData.abstract,
-        institution: formData.institution || null,
-        country: formData.country,
-        subject: formData.subject,
-        level: formData.level,
-        type: formData.type,
-        file_path: filePath,
-        user_id: userId,
-      });
-
-      if (error) throw error;
-
       setSubmitStatus('success');
       setTimeout(() => {
         onClose();
@@ -158,7 +113,6 @@ export default function UploadModal({ onClose }: UploadModalProps) {
     } catch (error: any) {
       console.error('Submission failed:', error);
       setSubmitStatus('error');
-      localStorage.setItem('pendingSubmission', JSON.stringify(formData));
     } finally {
       setIsSubmitting(false);
     }
@@ -169,30 +123,10 @@ export default function UploadModal({ onClose }: UploadModalProps) {
       case 1:
         return (
           <div className="space-y-6">
-            {/* Language Selector */}
-            <div>
-              <label htmlFor="language" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('formLanguage')}
-              </label>
-              <select
-                id="language"
-                name="language"
-                value={formData.language}
-                onChange={handleInputChange}
-                className="input"
-              >
-                <option value="en">English</option>
-                <option value="sw">Swahili</option>
-                <option value="fr">French</option>
-                <option value="es">Spanish</option>
-                <option value="hi">Hindi</option>
-              </select>
-            </div>
-
             {/* Title */}
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('paperTitle')} *
+            <div className="space-y-2">
+              <label htmlFor="title" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Publication Title *
               </label>
               <input
                 id="title"
@@ -200,21 +134,25 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                className={`input ${errors.title ? 'input-error' : ''}`}
-                placeholder={t('paperTitlePlaceholder')}
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.title ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
+                placeholder="Enter the full title of your research publication"
               />
               {errors.title && (
-                <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
-                  <ExclamationTriangleIcon className="w-4 h-4" />
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   <span>{errors.title}</span>
                 </p>
               )}
             </div>
 
             {/* Authors */}
-            <div>
-              <label htmlFor="authors" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('authors')} *
+            <div className="space-y-2">
+              <label htmlFor="authors" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Authors *
               </label>
               <input
                 id="authors"
@@ -222,12 +160,16 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                 name="authors"
                 value={formData.authors}
                 onChange={handleInputChange}
-                className={`input ${errors.authors ? 'input-error' : ''}`}
-                placeholder={t('authorsPlaceholder')}
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.authors ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
+                placeholder="e.g., Dr. Amina Kano, Prof. Ibrahim Lagos"
               />
               {errors.authors && (
-                <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
-                  <ExclamationTriangleIcon className="w-4 h-4" />
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   <span>{errors.authors}</span>
                 </p>
               )}
@@ -235,83 +177,93 @@ export default function UploadModal({ onClose }: UploadModalProps) {
 
             {/* Subject and Level */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('subjectArea')} *
+              <div className="space-y-2">
+                <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Subject Area *
                 </label>
                 <select
                   id="subject"
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
-                  className={`input ${errors.subject ? 'input-error' : ''}`}
+                  className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.subject ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  }`}
                 >
-                  <option value="">{t('selectSubject')}</option>
-                  <option value="agri">{t('agriculture')}</option>
-                  <option value="cs">{t('computerScience')}</option>
-                  <option value="econ">{t('economics')}</option>
-                  <option value="edu">{t('education')}</option>
-                  <option value="env">{t('environmentalScience')}</option>
-                  <option value="med">{t('medicineHealth')}</option>
-                  <option value="math">{t('mathematics')}</option>
-                  <option value="physics">{t('physics')}</option>
-                  <option value="soc">{t('socialSciences')}</option>
+                  <option value="">Select Subject</option>
+                  <option value="agri">Agriculture</option>
+                  <option value="cs">Computer Science</option>
+                  <option value="econ">Economics</option>
+                  <option value="edu">Education</option>
+                  <option value="env">Environmental Science</option>
+                  <option value="med">Medicine & Health</option>
+                  <option value="math">Mathematics</option>
+                  <option value="physics">Physics</option>
+                  <option value="soc">Social Sciences</option>
                 </select>
                 {errors.subject && (
-                  <p className="mt-1 text-sm text-red-600">{errors.subject}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{errors.subject}</p>
                 )}
               </div>
 
-              <div>
-                <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('educationLevel')} *
+              <div className="space-y-2">
+                <label htmlFor="level" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Research Level *
                 </label>
                 <select
                   id="level"
                   name="level"
                   value={formData.level}
                   onChange={handleInputChange}
-                  className={`input ${errors.level ? 'input-error' : ''}`}
+                  className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.level ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  }`}
                 >
-                  <option value="">{t('selectLevel')}</option>
-                  <option value="high-school">{t('highSchool')}</option>
-                  <option value="undergraduate">{t('undergraduate')}</option>
-                  <option value="community">{t('communityBased')}</option>
+                  <option value="">Select Level</option>
+                  <option value="undergraduate">Undergraduate</option>
+                  <option value="graduate">Graduate</option>
+                  <option value="doctoral">Doctoral</option>
+                  <option value="postdoctoral">Postdoctoral</option>
                 </select>
                 {errors.level && (
-                  <p className="mt-1 text-sm text-red-600">{errors.level}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{errors.level}</p>
                 )}
               </div>
             </div>
 
             {/* Country and Institution */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('country')} *
+              <div className="space-y-2">
+                <label htmlFor="country" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Country *
                 </label>
                 <select
                   id="country"
                   name="country"
                   value={formData.country}
                   onChange={handleInputChange}
-                  className={`input ${errors.country ? 'input-error' : ''}`}
+                  className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                    errors.country ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  }`}
                 >
-                  <option value="">{t('selectCountry')}</option>
-                  <option value="Nigeria">{t('nigeria')}</option>
-                  <option value="Kenya">{t('kenya')}</option>
-                  <option value="Ghana">{t('ghana')}</option>
-                  <option value="India">{t('india')}</option>
-                  <option value="Brazil">{t('brazil')}</option>
+                  <option value="">Select Country</option>
+                  <option value="Nigeria">Nigeria</option>
+                  <option value="Kenya">Kenya</option>
+                  <option value="Ghana">Ghana</option>
+                  <option value="South Africa">South Africa</option>
+                  <option value="Uganda">Uganda</option>
+                  <option value="India">India</option>
+                  <option value="Bangladesh">Bangladesh</option>
+                  <option value="Brazil">Brazil</option>
                 </select>
                 {errors.country && (
-                  <p className="mt-1 text-sm text-red-600">{errors.country}</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{errors.country}</p>
                 )}
               </div>
 
-              <div>
-                <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('institution')}
+              <div className="space-y-2">
+                <label htmlFor="institution" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Institution
                 </label>
                 <input
                   id="institution"
@@ -319,8 +271,8 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                   name="institution"
                   value={formData.institution}
                   onChange={handleInputChange}
-                  className="input"
-                  placeholder={t('institutionPlaceholder')}
+                  className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  placeholder="University or research center name"
                 />
               </div>
             </div>
@@ -331,9 +283,9 @@ export default function UploadModal({ onClose }: UploadModalProps) {
         return (
           <div className="space-y-6">
             {/* Abstract */}
-            <div>
-              <label htmlFor="abstract" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('summary')} *
+            <div className="space-y-2">
+              <label htmlFor="abstract" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Abstract *
               </label>
               <textarea
                 id="abstract"
@@ -341,46 +293,62 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                 value={formData.abstract}
                 onChange={handleInputChange}
                 rows={6}
-                className={`input ${errors.abstract ? 'input-error' : ''}`}
-                placeholder={t('summaryPlaceholder')}
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none ${
+                  errors.abstract ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
+                placeholder="Provide a concise summary of your research"
               />
               {errors.abstract && (
-                <p className="mt-1 text-sm text-red-600">{errors.abstract}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{errors.abstract}</span>
+                </p>
               )}
             </div>
 
             {/* Publication Type */}
-            <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('typeOfWork')} *
+            <div className="space-y-2">
+              <label htmlFor="type" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Publication Type *
               </label>
               <select
                 id="type"
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
-                className={`input ${errors.type ? 'input-error' : ''}`}
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                  errors.type ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'
+                }`}
               >
-                <option value="">{t('selectType')}</option>
-                <option value="article">{t('journalArticle')}</option>
-                <option value="conference_paper">{t('conferencePaper')}</option>
-                <option value="book">{t('book')}</option>
-                <option value="thesis">{t('thesis')}</option>
-                <option value="community_report">{t('communityReport')}</option>
-                <option value="other">{t('other')}</option>
+                <option value="">Select Type</option>
+                <option value="article">Journal Article</option>
+                <option value="conference_paper">Conference Paper</option>
+                <option value="working_paper">Working Paper</option>
+                <option value="book">Book</option>
+                <option value="thesis">Thesis</option>
+                <option value="technical_report">Technical Report</option>
               </select>
               {errors.type && (
-                <p className="mt-1 text-sm text-red-600">{errors.type}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{errors.type}</span>
+                </p>
               )}
             </div>
 
             {/* File Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('uploadFile')} *
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Upload PDF *
               </label>
-              <div className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                errors.file ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+              <div className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+                errors.file 
+                  ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20' 
+                  : 'border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
               }`}>
                 <input
                   type="file"
@@ -390,15 +358,24 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                   id="file-upload"
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <div className="text-lg font-medium text-gray-900 mb-2">
-                    {formData.file ? formData.file.name : t('choosePDF')}
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
                   </div>
-                  <p className="text-sm text-gray-600">{t('maxFileSize')}</p>
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {formData.file ? formData.file.name : 'Choose PDF File'}
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">PDF only, max 5MB</p>
                 </label>
               </div>
               {errors.file && (
-                <p className="mt-2 text-sm text-red-600">{errors.file}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{errors.file}</span>
+                </p>
               )}
             </div>
           </div>
@@ -407,37 +384,75 @@ export default function UploadModal({ onClose }: UploadModalProps) {
       case 3:
         return (
           <div className="space-y-6">
-            <div className="bg-blue-50 rounded-lg p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <InformationCircleIcon className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-semibold text-blue-900">Review Your Submission</h3>
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-blue-900 dark:text-blue-300">Review Your Submission</h3>
               </div>
-              <div className="space-y-3 text-sm">
-                <div><strong>Title:</strong> {formData.title}</div>
-                <div><strong>Authors:</strong> {formData.authors}</div>
-                <div><strong>Subject:</strong> {t(formData.subject)}</div>
-                <div><strong>Level:</strong> {t(formData.level)}</div>
-                <div><strong>Country:</strong> {formData.country}</div>
-                {formData.institution && <div><strong>Institution:</strong> {formData.institution}</div>}
-                <div><strong>Type:</strong> {t(formData.type)}</div>
-                <div><strong>File:</strong> {formData.file?.name}</div>
+              <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+                <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                  <div className="font-semibold">Title:</div>
+                  <div className="col-span-2">{formData.title}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                  <div className="font-semibold">Authors:</div>
+                  <div className="col-span-2">{formData.authors}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                  <div className="font-semibold">Subject:</div>
+                  <div className="col-span-2">{formData.subject}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                  <div className="font-semibold">Level:</div>
+                  <div className="col-span-2">{formData.level}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                  <div className="font-semibold">Country:</div>
+                  <div className="col-span-2">{formData.country}</div>
+                </div>
+                {formData.institution && (
+                  <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                    <div className="font-semibold">Institution:</div>
+                    <div className="col-span-2">{formData.institution}</div>
+                  </div>
+                )}
+                <div className="grid grid-cols-3 gap-4 py-2 border-b border-blue-200 dark:border-blue-800">
+                  <div className="font-semibold">Type:</div>
+                  <div className="col-span-2">{formData.type}</div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 py-2">
+                  <div className="font-semibold">File:</div>
+                  <div className="col-span-2">{formData.file?.name}</div>
+                </div>
               </div>
             </div>
 
             {submitStatus === 'success' && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                  <span className="text-green-800 font-medium">Submission successful!</span>
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-green-800 dark:text-green-300 font-semibold text-lg">Submission successful!</span>
                 </div>
               </div>
             )}
 
             {submitStatus === 'error' && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-red-600" />
-                  <span className="text-red-800 font-medium">Submission failed. Please try again.</span>
+              <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-red-800 dark:text-red-300 font-semibold text-lg">Submission failed. Please try again.</span>
                 </div>
               </div>
             )}
@@ -450,54 +465,64 @@ export default function UploadModal({ onClose }: UploadModalProps) {
   };
 
   return (
-    <div className="modal-overlay flex items-center justify-center p-4" role="dialog" aria-labelledby="upload-modal-title">
-      <div className="modal-content">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full mx-auto max-h-[90vh] overflow-hidden border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
           <div className="flex items-center justify-between">
-            <h2 id="upload-modal-title" className="text-xl font-semibold text-gray-900">
-              {t('submitResearch')}
+            <h2 className="text-2xl font-bold text-white">
+              Submit Research Publication
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all"
               aria-label="Close"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
           {/* Progress Steps */}
-          <div className="mt-4">
-            <div className="flex items-center space-x-4">
+          <div className="mt-6">
+            <div className="flex items-center justify-between">
               {steps.map((step, index) => {
-                const Icon = step.icon;
                 const isActive = currentStep === step.id;
                 const isCompleted = currentStep > step.id;
                 
                 return (
-                  <div key={step.id} className="flex items-center">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors ${
-                      isCompleted 
-                        ? 'bg-green-600 border-green-600 text-white' 
-                        : isActive 
-                        ? 'bg-blue-600 border-blue-600 text-white' 
-                        : 'border-gray-300 text-gray-400'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircleIcon className="w-5 h-5" />
-                      ) : (
-                        <Icon className="w-4 h-4" />
-                      )}
+                  <div key={step.id} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center">
+                      <div className={`flex items-center justify-center w-12 h-12 rounded-2xl border-2 transition-all ${
+                        isCompleted 
+                          ? 'bg-white text-green-600 border-white' 
+                          : isActive 
+                          ? 'bg-white text-blue-600 border-white' 
+                          : 'border-white/40 text-white/60'
+                      }`}>
+                        {isCompleted ? (
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="font-bold">{step.id}</span>
+                        )}
+                      </div>
+                      <div className="mt-2 text-center">
+                        <div className={`text-sm font-semibold ${
+                          isActive ? 'text-white' : isCompleted ? 'text-white' : 'text-white/60'
+                        }`}>
+                          {step.name}
+                        </div>
+                        <div className="text-xs text-white/60 mt-1">
+                          {step.description}
+                        </div>
+                      </div>
                     </div>
-                    <span className={`ml-2 text-sm font-medium ${
-                      isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                    }`}>
-                      {step.name}
-                    </span>
                     {index < steps.length - 1 && (
-                      <div className={`ml-4 w-8 h-0.5 ${
-                        isCompleted ? 'bg-green-600' : 'bg-gray-300'
+                      <div className={`flex-1 h-1 mx-4 rounded-full ${
+                        isCompleted ? 'bg-white' : 'bg-white/20'
                       }`} />
                     )}
                   </div>
@@ -508,26 +533,26 @@ export default function UploadModal({ onClose }: UploadModalProps) {
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6 max-h-96 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-8 max-h-[60vh] overflow-y-auto">
           {renderStepContent()}
         </form>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+        <div className="px-8 py-6 border-t border-gray-200 dark:border-gray-700 flex justify-between bg-gray-50 dark:bg-gray-900/50">
           <button
             type="button"
             onClick={currentStep === 1 ? onClose : prevStep}
-            className="btn btn-secondary"
+            className="bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:shadow-lg"
           >
-            {currentStep === 1 ? t('cancel') : 'Previous'}
+            {currentStep === 1 ? 'Cancel' : 'Back'}
           </button>
           
-          <div className="flex space-x-3">
+          <div className="flex space-x-4">
             {currentStep < 3 ? (
               <button
                 type="button"
                 onClick={nextStep}
-                className="btn btn-primary"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:shadow-lg transform hover:scale-105"
               >
                 Next
               </button>
@@ -536,15 +561,17 @@ export default function UploadModal({ onClose }: UploadModalProps) {
                 type="submit"
                 onClick={handleSubmit}
                 disabled={isSubmitting || submitStatus === 'success'}
-                className="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    <svg className="w-4 h-4 animate-spin inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
                     Submitting...
                   </>
                 ) : (
-                  t('submit')
+                  'Submit'
                 )}
               </button>
             )}

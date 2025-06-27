@@ -2,11 +2,6 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  FunnelIcon, 
-  XMarkIcon,
-  CheckIcon
-} from '@heroicons/react/24/outline';
 
 interface AdvancedFiltersProps {
   papers: any[];
@@ -89,190 +84,206 @@ export default function AdvancedFilters({ papers, setFilteredPapers, setCurrentP
   const hasActiveFilters = Object.values(filters).some(value => value !== '');
 
   return (
-    <div className="card p-6 mb-8 animate-slide-up">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <FunnelIcon className="w-6 h-6 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">{t('advancedSearchFilters')}</h3>
-        </div>
-        {hasActiveFilters && (
-          <span className="badge badge-primary">
-            {Object.values(filters).filter(v => v !== '').length} active
-          </span>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Country Filter */}
-        <div>
-          <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('countryRegion')}
-          </label>
-          <select
-            id="country"
-            name="country"
-            value={filters.country}
-            onChange={handleFilterChange}
-            className="input"
-            aria-label={t('countryRegion')}
-          >
-            <option value="">{t('allCountries')}</option>
-            <option value="Nigeria">{t('nigeria')}</option>
-            <option value="Kenya">{t('kenya')}</option>
-            <option value="Ghana">{t('ghana')}</option>
-            <option value="South Africa">{t('southAfrica')}</option>
-            <option value="Egypt">{t('egypt')}</option>
-            <option value="India">{t('india')}</option>
-            <option value="Bangladesh">{t('bangladesh')}</option>
-            <option value="Pakistan">{t('pakistan')}</option>
-            <option value="Indonesia">{t('indonesia')}</option>
-            <option value="Philippines">{t('philippines')}</option>
-            <option value="Brazil">{t('brazil')}</option>
-            <option value="Mexico">{t('mexico')}</option>
-            <option value="Colombia">{t('colombia')}</option>
-            <option value="Peru">{t('peru')}</option>
-          </select>
-        </div>
-
-        {/* Subject Filter */}
-        <div>
-          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('subjectClassification')}
-          </label>
-          <select
-            id="subject"
-            name="subject"
-            value={filters.subject}
-            onChange={handleFilterChange}
-            className="input"
-            aria-label={t('subjectClassification')}
-          >
-            <option value="">{t('allSubjects')}</option>
-            <option value="agri">{t('agriculture')}</option>
-            <option value="cs">{t('computerScience')}</option>
-            <option value="econ">{t('economics')}</option>
-            <option value="edu">{t('education')}</option>
-            <option value="env">{t('environmentalScience')}</option>
-            <option value="med">{t('medicineHealth')}</option>
-            <option value="math">{t('mathematics')}</option>
-            <option value="physics">{t('physics')}</option>
-            <option value="soc">{t('socialSciences')}</option>
-          </select>
-        </div>
-
-        {/* Education Level Filter */}
-        <div>
-          <label htmlFor="level" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('educationLevel')}
-          </label>
-          <select
-            id="level"
-            name="level"
-            value={filters.level}
-            onChange={handleFilterChange}
-            className="input"
-            aria-label={t('educationLevel')}
-          >
-            <option value="">{t('allLevels')}</option>
-            <option value="high-school">{t('highSchool')}</option>
-            <option value="undergraduate">{t('undergraduate')}</option>
-            <option value="community">{t('communityBased')}</option>
-          </select>
-        </div>
-
-        {/* Publication Type Filter */}
-        <div>
-          <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('publicationType')}
-          </label>
-          <select
-            id="type"
-            name="type"
-            value={filters.type}
-            onChange={handleFilterChange}
-            className="input"
-            aria-label={t('publicationType')}
-          >
-            <option value="">{t('allTypes')}</option>
-            <option value="article">{t('journalArticle')}</option>
-            <option value="conference_paper">{t('conferencePaper')}</option>
-            <option value="book">{t('book')}</option>
-            <option value="thesis">{t('thesis')}</option>
-            <option value="dissertation">{t('dissertation')}</option>
-            <option value="technical_report">{t('technicalReport')}</option>
-            <option value="community_report">{t('communityReport')}</option>
-            <option value="other">{t('other')}</option>
-          </select>
-        </div>
-
-        {/* Date Range Filter */}
-        <div>
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('dateRange')}
-          </label>
-          <select
-            id="date"
-            name="date"
-            value={filters.date}
-            onChange={handleFilterChange}
-            className="input"
-            aria-label={t('dateRange')}
-          >
-            <option value="">{t('allDates')}</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
-            <option value="2021">2021</option>
-            <option value="2020">2020</option>
-            <option value="older">{t('before2020')}</option>
-          </select>
-        </div>
-
-        {/* Institution Filter */}
-        <div>
-          <label htmlFor="institution" className="block text-sm font-medium text-gray-700 mb-2">
-            {t('institution')}
-          </label>
-          <input
-            id="institution"
-            type="text"
-            name="institution"
-            value={filters.institution}
-            onChange={handleFilterChange}
-            placeholder={t('institutionPlaceholder')}
-            className="input"
-            aria-label={t('institution')}
-          />
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <button
-          onClick={applyFilters}
-          disabled={isApplying}
-          className="btn btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isApplying ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Applying...</span>
-            </>
-          ) : (
-            <>
-              <CheckIcon className="w-4 h-4" />
-              <span>{t('applyFilters')}</span>
-            </>
+    <div className="relative bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/50 dark:from-gray-800 dark:via-indigo-900/20 dark:to-purple-900/30 rounded-3xl p-8 mb-8 shadow-xl border border-gray-100 dark:border-gray-700/50 backdrop-blur-sm overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-400/10 to-purple-600/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-cyan-600/10 rounded-full blur-3xl"></div>
+      
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Advanced Filters
+            </h3>
+          </div>
+          {hasActiveFilters && (
+            <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg">
+              {Object.values(filters).filter(v => v !== '').length} active
+            </span>
           )}
-        </button>
-        
-        <button
-          onClick={clearFilters}
-          className="btn btn-secondary flex items-center justify-center space-x-2"
-        >
-          <XMarkIcon className="w-4 h-4" />
-          <span>{t('clearAll')}</span>
-        </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {/* Country Filter */}
+          <div className="space-y-2">
+            <label htmlFor="country" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Country/Region
+            </label>
+            <div className="relative">
+              <select
+                id="country"
+                name="country"
+                value={filters.country}
+                onChange={handleFilterChange}
+                className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
+                aria-label="Country/Region"
+              >
+                <option value="">All Countries</option>
+                <option value="Nigeria">Nigeria</option>
+                <option value="Kenya">Kenya</option>
+                <option value="Ghana">Ghana</option>
+                <option value="South Africa">South Africa</option>
+                <option value="Uganda">Uganda</option>
+                <option value="India">India</option>
+                <option value="Bangladesh">Bangladesh</option>
+                <option value="Brazil">Brazil</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Subject Filter */}
+          <div className="space-y-2">
+            <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Subject Area
+            </label>
+            <select
+              id="subject"
+              name="subject"
+              value={filters.subject}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
+              aria-label="Subject Area"
+            >
+              <option value="">All Subjects</option>
+              <option value="agri">Agriculture</option>
+              <option value="cs">Computer Science</option>
+              <option value="econ">Economics</option>
+              <option value="edu">Education</option>
+              <option value="env">Environmental Science</option>
+              <option value="med">Medicine & Health</option>
+              <option value="math">Mathematics</option>
+              <option value="physics">Physics</option>
+              <option value="soc">Social Sciences</option>
+            </select>
+          </div>
+
+          {/* Publication Type Filter */}
+          <div className="space-y-2">
+            <label htmlFor="type" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Publication Type
+            </label>
+            <select
+              id="type"
+              name="type"
+              value={filters.type}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
+              aria-label="Publication Type"
+            >
+              <option value="">All Types</option>
+              <option value="article">Journal Article</option>
+              <option value="conference_paper">Conference Paper</option>
+              <option value="working_paper">Working Paper</option>
+              <option value="book">Book</option>
+              <option value="thesis">Thesis</option>
+              <option value="technical_report">Technical Report</option>
+            </select>
+          </div>
+
+          {/* Date Range Filter */}
+          <div className="space-y-2">
+            <label htmlFor="date" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Publication Year
+            </label>
+            <select
+              id="date"
+              name="date"
+              value={filters.date}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
+              aria-label="Publication Year"
+            >
+              <option value="">All Years</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020</option>
+              <option value="older">Before 2020</option>
+            </select>
+          </div>
+
+          {/* Education Level Filter */}
+          <div className="space-y-2">
+            <label htmlFor="level" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Research Level
+            </label>
+            <select
+              id="level"
+              name="level"
+              value={filters.level}
+              onChange={handleFilterChange}
+              className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
+              aria-label="Research Level"
+            >
+              <option value="">All Levels</option>
+              <option value="undergraduate">Undergraduate</option>
+              <option value="graduate">Graduate</option>
+              <option value="doctoral">Doctoral</option>
+              <option value="postdoctoral">Postdoctoral</option>
+            </select>
+          </div>
+
+          {/* Institution Filter */}
+          <div className="space-y-2">
+            <label htmlFor="institution" className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Institution
+            </label>
+            <input
+              id="institution"
+              type="text"
+              name="institution"
+              value={filters.institution}
+              onChange={handleFilterChange}
+              placeholder="University or research center name"
+              className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-xl bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm hover:shadow-md placeholder-gray-400 dark:placeholder-gray-500"
+              aria-label="Institution"
+            />
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={applyFilters}
+            disabled={isApplying}
+            className="group relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+          >
+            <span className="relative z-10 flex items-center justify-center space-x-2">
+              {isApplying ? (
+                <>
+                  <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Applying...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Apply Filters</span>
+                </>
+              )}
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+          </button>
+          
+          <button
+            onClick={clearFilters}
+            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 hover:shadow-lg flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Clear All</span>
+          </button>
+        </div>
       </div>
     </div>
   );
