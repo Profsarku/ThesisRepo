@@ -3,33 +3,24 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  MagnifyingGlassIcon, 
-  Bars3Icon, 
-  XMarkIcon,
-  PlusIcon,
-  GlobeAltIcon,
-  BookOpenIcon,
-  ChartBarIcon,
-  InformationCircleIcon,
-  EnvelopeIcon
-} from '@heroicons/react/24/outline';
 
 interface HeaderProps {
   onSubmitClick: () => void;
+  darkMode: boolean;
+  setDarkMode: (dark: boolean) => void;
 }
 
-export default function Header({ onSubmitClick }: HeaderProps) {
+export default function Header({ onSubmitClick, darkMode, setDarkMode }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
   const navigation = [
-    { name: t('browse'), href: '/browse', icon: BookOpenIcon },
-    { name: t('search'), href: '/search', icon: MagnifyingGlassIcon },
-    { name: t('statistics'), href: '/stats', icon: ChartBarIcon },
-    { name: t('about'), href: '/about', icon: InformationCircleIcon },
-    { name: t('contact'), href: '/contact', icon: EnvelopeIcon },
+    { name: 'Browse Publications', href: '/browse' },
+    { name: 'Advanced Search', href: '/search' },
+    { name: 'Research Metrics', href: '/stats' },
+    { name: 'About Repository', href: '/about' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   const languages = [
@@ -46,63 +37,94 @@ export default function Header({ onSubmitClick }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <header className={`shadow-sm border-b sticky top-0 z-40 transition-colors duration-300 ${
+      darkMode 
+        ? 'bg-gray-800 border-gray-700' 
+        : 'bg-white border-gray-200'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-3 group">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
-                <GlobeAltIcon className="w-6 h-6 text-white" />
+                <span className="text-white text-lg font-bold">📚</span>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  Global Research
+                <h1 className={`text-xl font-bold group-hover:text-blue-600 transition-colors ${
+                  darkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Research Repository
                 </h1>
-                <p className="text-xs text-gray-500 -mt-1">by inested.com</p>
+                <p className={`text-xs -mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Global South Research
+                </p>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                  darkMode
+                    ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
           </nav>
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className={`p-2 rounded-lg transition-all ${
+                darkMode
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+
             {/* Language Selector */}
             <div className="relative">
               <button
                 onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
-                className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                className={`flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                  darkMode
+                    ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
               >
-                <GlobeAltIcon className="w-4 h-4" />
+                <span>🌐</span>
                 <span className="hidden sm:inline">
                   {languages.find(lang => lang.code === i18n.language)?.flag || '🌐'}
                 </span>
               </button>
               
               {languageMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg border py-1 z-50 ${
+                  darkMode
+                    ? 'bg-gray-800 border-gray-700'
+                    : 'bg-white border-gray-200'
+                }`}>
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => changeLanguage(lang.code)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center space-x-3 ${
-                        i18n.language === lang.code ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-3 transition-colors ${
+                        i18n.language === lang.code 
+                          ? (darkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-50 text-blue-600')
+                          : (darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-50')
                       }`}
                     >
                       <span>{lang.flag}</span>
@@ -116,22 +138,26 @@ export default function Header({ onSubmitClick }: HeaderProps) {
             {/* Submit Button */}
             <button
               onClick={onSubmitClick}
-              className="btn btn-primary flex items-center space-x-2"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
             >
-              <PlusIcon className="w-4 h-4" />
-              <span className="hidden sm:inline">{t('submitResearch')}</span>
+              <span>📄</span>
+              <span className="hidden sm:inline">Submit Research</span>
               <span className="sm:hidden">Submit</span>
             </button>
 
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              className={`md:hidden p-2 rounded-lg transition-all ${
+                darkMode
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
             >
               {mobileMenuOpen ? (
-                <XMarkIcon className="w-5 h-5" />
+                <span className="text-lg">✕</span>
               ) : (
-                <Bars3Icon className="w-5 h-5" />
+                <span className="text-lg">☰</span>
               )}
             </button>
           </div>
@@ -139,22 +165,24 @@ export default function Header({ onSubmitClick }: HeaderProps) {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4 animate-slide-up">
+          <div className={`md:hidden border-t py-4 animate-slide-up ${
+            darkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
             <nav className="space-y-2">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center space-x-3 px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.name}</span>
-                  </Link>
-                );
-              })}
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`block px-3 py-2 text-sm font-medium rounded-lg transition-all ${
+                    darkMode
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
             </nav>
           </div>
         )}

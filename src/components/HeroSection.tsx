@@ -1,14 +1,6 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { 
-  MagnifyingGlassIcon, 
-  GlobeAltIcon, 
-  AcademicCapIcon,
-  UsersIcon,
-  BookOpenIcon,
-  ArrowRightIcon
-} from '@heroicons/react/24/outline';
 
 interface HeroSectionProps {
   onSearchClick: () => void;
@@ -19,29 +11,29 @@ export default function HeroSection({ onSearchClick }: HeroSectionProps) {
 
   const features = [
     {
-      icon: GlobeAltIcon,
-      title: 'Global Reach',
-      description: 'Research from 50+ developing nations'
+      title: 'Peer-Reviewed Research',
+      description: 'Rigorous academic standards',
+      icon: '🔬'
     },
     {
-      icon: AcademicCapIcon,
-      title: 'All Levels',
-      description: 'High school to community research'
-    },
-    {
-      icon: UsersIcon,
-      title: 'Inclusive',
-      description: 'Supporting underrepresented voices'
-    },
-    {
-      icon: BookOpenIcon,
       title: 'Open Access',
-      description: 'Free knowledge for everyone'
+      description: 'Freely accessible publications',
+      icon: '🔓'
+    },
+    {
+      title: 'Global South Focus',
+      description: 'Research from developing regions',
+      icon: '🌍'
+    },
+    {
+      title: 'Interdisciplinary',
+      description: 'Cross-domain collaboration',
+      icon: '🔗'
     }
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -53,15 +45,15 @@ export default function HeroSection({ onSearchClick }: HeroSectionProps) {
         <div className="text-center">
           {/* Main Heading */}
           <div className="mb-8">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Empowering Research from
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+              Advancing Scientific Knowledge from
               <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Developing Nations
+                Emerging Research Centers
               </span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Discover groundbreaking research from underrepresented communities worldwide. 
-              Connect with researchers, access open knowledge, and contribute to global innovation.
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Access cutting-edge research publications from leading institutions across the Global South. 
+              Discover innovative solutions to global challenges through rigorous scientific inquiry.
             </p>
           </div>
 
@@ -69,35 +61,32 @@ export default function HeroSection({ onSearchClick }: HeroSectionProps) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <button
               onClick={onSearchClick}
-              className="btn btn-primary text-lg px-8 py-4 flex items-center space-x-2 group"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors flex items-center space-x-2 group"
             >
-              <MagnifyingGlassIcon className="w-5 h-5" />
-              <span>Explore Research</span>
-              <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <span>🔍</span>
+              <span>Search Publications</span>
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
             </button>
-            <button className="btn btn-secondary text-lg px-8 py-4">
-              Learn More
+            <button className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 px-8 py-4 rounded-lg text-lg font-medium transition-colors">
+              Browse by Subject
             </button>
           </div>
 
           {/* Features Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div 
-                  key={feature.title}
-                  className="text-center group animate-fade-in"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="w-16 h-16 bg-white rounded-2xl shadow-soft flex items-center justify-center mx-auto mb-4 group-hover:shadow-medium transition-all">
-                    <Icon className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.description}</p>
+            {features.map((feature, index) => (
+              <div 
+                key={feature.title}
+                className="text-center group animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="w-16 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-lg flex items-center justify-center mx-auto mb-4 group-hover:shadow-xl transition-all border dark:border-gray-700">
+                  <span className="text-2xl">{feature.icon}</span>
                 </div>
-              );
-            })}
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -107,7 +96,7 @@ export default function HeroSection({ onSearchClick }: HeroSectionProps) {
         <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-            fill="rgb(249, 250, 251)"
+            className="fill-gray-50 dark:fill-gray-900"
           />
         </svg>
       </div>
